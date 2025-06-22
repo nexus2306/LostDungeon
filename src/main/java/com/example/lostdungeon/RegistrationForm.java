@@ -18,9 +18,9 @@ public class RegistrationForm extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // Если уже есть сохранённый email, сразу в главное меню
-        String savedEmail = getSavedEmail();
-        if (savedEmail != null) {
+        // Если уже есть сохранённое имя, сразу в главное меню
+        String savedName = getSavedName();
+        if (savedName != null) {
             openMainMenu(primaryStage);
             return;
         }
@@ -64,7 +64,7 @@ public class RegistrationForm extends Application {
             }
 
             if (DataBase.register(name, email, password)) {
-                SessionManager.setCurrentEmail(email); //  Добавлено: сохраняем текущий email
+                saveNameToFile(name); // сохраняем имя, а не email
                 openMainMenu(primaryStage);
             } else {
                 showAlert(Alert.AlertType.ERROR, "Пользователь с таким email уже существует.");
@@ -111,7 +111,8 @@ public class RegistrationForm extends Application {
             String password = passwordField.getText();
 
             if (DataBase.checkLogin(email, password)) {
-                saveEmailToFile(email);
+                String name = DataBase.getPlayerNameByEmail(email); // получаем имя по email
+                saveNameToFile(name); // сохраняем имя
                 openMainMenu(primaryStage);
             } else {
                 showAlert(Alert.AlertType.ERROR, "Неверный email или пароль.");
@@ -175,15 +176,15 @@ public class RegistrationForm extends Application {
         return pf;
     }
 
-    private void saveEmailToFile(String email) {
+    private void saveNameToFile(String name) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(SAVE_FILE))) {
-            writer.write(email);
+            writer.write(name);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static String getSavedEmail() {
+    public static String getSavedName() {
         File file = new File(SAVE_FILE);
         if (!file.exists()) return null;
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -194,7 +195,7 @@ public class RegistrationForm extends Application {
         }
     }
 
-    public static void clearSavedEmail() {
+    public static void clearSavedName() {
         File file = new File(SAVE_FILE);
         if (file.exists()) file.delete();
     }

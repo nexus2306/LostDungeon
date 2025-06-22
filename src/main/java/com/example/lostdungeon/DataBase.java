@@ -2,6 +2,8 @@ package com.example.lostdungeon;
 
 import java.sql.*;
 
+
+
 public class DataBase {
 
     private static final String URL = "jdbc:sqlite:player.db";
@@ -16,7 +18,7 @@ public class DataBase {
                     email TEXT NOT NULL UNIQUE,
                     password TEXT NOT NULL,
                     level INTEGER DEFAULT 1,
-                    score INTEGER DEFAULT 0
+                    steps INTEGER DEFAULT 0
                 );
             """;
             conn.createStatement().execute(sql);
@@ -131,6 +133,56 @@ public class DataBase {
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+      }
+    }
+public static int getSteps(int playerId) {
+    String sql = "SELECT steps FROM players WHERE id = ?";
+
+    try (Connection conn = connect();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+        pstmt.setInt(1, playerId);
+        ResultSet rs = pstmt.executeQuery();
+
+        if (rs.next()) {
+            return rs.getInt("steps");
+        }
+
+    } catch (SQLException e) {
+        System.err.println("Ошибка при получении шагов: " + e.getMessage());
+    }
+
+    return 0; // по умолчанию
+}
+
+    public static String getPlayerNameByEmail(String email) {
+        String sql = "SELECT name FROM players WHERE email = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("name"); //
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Ошибка при получении имени игрока по email: " + e.getMessage());
+        }
+
+        return null; // не "unknown_user", чтобы было видно проблему
+    }
+
+    private static Connection connect() {
+        String url = "jdbc:sqlite:player.db"; // путь к БД, можно указать полный путь если нужно
+
+        try {
+            return DriverManager.getConnection(url);
+        } catch (SQLException e) {
+            System.err.println("Ошибка подключения к БД: " + e.getMessage());
+            return null;
         }
     }
 }

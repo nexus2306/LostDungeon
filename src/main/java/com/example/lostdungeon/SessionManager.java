@@ -3,18 +3,26 @@ package com.example.lostdungeon;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.prefs.Preferences;
 
 public class SessionManager {
-    private static final String CURRENT_EMAIL_KEY = "current_email";
+    private static final Path SESSION_FILE = Path.of("current_user.txt");
+
     private static String currentEmail;
     private static int currentPlayerId;
     private static int currentLevel;
+    private static String currentPlayerName;
 
     public static void setCurrentEmail(String email) {
         currentEmail = email;
         currentPlayerId = DataBase.getPlayerIdByEmail(email);
         currentLevel = DataBase.getLevel(currentPlayerId);
+        currentPlayerName = DataBase.getPlayerNameByEmail(email); // имя из БД
+
+        try {
+            Files.writeString(SESSION_FILE, currentPlayerName);
+        } catch (IOException e) {
+            System.err.println("Не удалось записать имя в current_user.txt: " + e.getMessage());
+        }
     }
 
     public static String getCurrentEmail() {
@@ -37,12 +45,23 @@ public class SessionManager {
         currentEmail = null;
         currentPlayerId = -1;
         currentLevel = 1;
+        currentPlayerName = null;
 
-        // Очистка файла current_user.txt
         try {
-            Files.deleteIfExists(Path.of("current_user.txt"));
+            Files.deleteIfExists(SESSION_FILE);
         } catch (IOException e) {
-            System.err.println("Не удалось удалить файл current_user.txt: " + e.getMessage());
+            System.err.println("Не удалось удалить current_user.txt: " + e.getMessage());
         }
+    }
+
+    public static String getCurrentPlayerName() {
+        if (currentPlayerName == null) {
+            try {
+                currentPlayerName = Files.readString(SESSION_FILE).trim();
+            } catch (IOException e) {
+                System.err.println("Не удалось прочитать current_user.txt: " + e.getMessage());
+            }
+        }
+        return currentPlayerName;
     }
 }
